@@ -1,0 +1,1 @@
+int specialCase(char *, char *);
