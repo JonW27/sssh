@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include "libs.h"
+#include "signals.h"
 
 void prompt(){
   printf("\e[1;95m$ \e[1;94msssh\e[0;106m\e[0m\e[1;91m> ");
@@ -24,12 +26,14 @@ char ** parse_args(char line[]){
 }
 
 int main(){
+  signal(SIGINT, sighandler);
   char line[200]; // can change size of this later
   while(1){
     prompt();
     fgets(line, 200, stdin);
+    printf("\x1b[0m \n");
     char ** args = parse_args(line);
-    int class = specialCase(args[1], args[2]); // cd, exit, my shell man page
+    int class = specialCase(args[0], args[1]); // cd, exit, my shell man page
     if(!class){
       int f = fork();
       int * status;
