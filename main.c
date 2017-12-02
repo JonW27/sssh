@@ -34,7 +34,7 @@ int main(){
     printf("\x1b[0m \n");
     char ** args = parse_args(line);
     int class = specialCase(args[0], args[1]); // cd, exit, my shell man page
-    if(!class){
+    if(class == 0){
       int f = fork();
       int * status;
       if(f == 0){
