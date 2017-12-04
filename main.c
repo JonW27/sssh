@@ -34,18 +34,17 @@ char ** parse_args(char line[]){
 
 char ** parse_cmds(char line[]){
   char ** args;
-  args = malloc(100); // support 100 args
+  args = malloc(100); // support 100 cmds
   int i = 0;
   char * element;
-  element = malloc(100); // support 100 args
-  while((element = strsep(&line, ";")) != NULL){
+  element = malloc(100); // support 100 cmds
+  while((element = strsep(&line, ";")) != NULL || (element = strsep(&line, "&&")) != NULL){ // does not work atm
     args[i] = trim_cmd(element);
     i++;
   }
   args[i] = NULL;
   return args;
 }
-
 
 void print_args(char ** args){
 	int i = 0;
@@ -64,7 +63,6 @@ void print_cmds(char ** cmds){
 }
 
 char * trim_cmd(char * elem){
-  // theres no standard way to do this, I consulted stackoverflow
   int size = strlen(elem);
 
   while(isspace(*elem)){ // checks if space
@@ -81,11 +79,16 @@ char * trim_cmd(char * elem){
   while(end>= elem && isspace(*end)){
     end--;
   }
-  //*(end + 1) = 0;
   return elem;
 }
 
+/*char * piping(){
+  if()
+}*/
+
 void run_cmd(char * cmd){
+  char data[100];
+  memcpy(data, cmd, 100);
   char ** args = parse_args(cmd);
   if(DEBUG){
       print_args(args);
@@ -99,8 +102,31 @@ void run_cmd(char * cmd){
     int f = fork();
     if(f == 0){
       if(DEBUG){
-          printf("forked\n");
+          printf("forked, command is %s\n", cmd);
       }
+      // im being rekted by a dilemma: what if it has a shitload of pipes and redirs?
+      /*if(strchr(data, '>') || strchr(data, '<')){
+        int i = strlen(data)-1;
+        int last_delim = strlen(data)-1;
+        int k = 0;
+        while(data[i] != NULL){
+          if(data[i] == '>'){
+              char * temp[last_delim-i];
+              strcpy(temp, data[i], last_delim-i);
+              open(temp, O_WRONLY | O_TRUNC | O_CREAT);
+          }
+          if(data[i] == '<'){
+              char * temp[last_delim-i];
+              strcpy(temp, data[i], last_delim-i);
+              open(lastarg, O_WRONLY | O_TRUNC | O_CREAT);
+            }
+            check = true;
+          }
+          i--;
+        }
+        printf("redirection!\n");
+
+      }*/
       execvp(args[0], args);
     }
     else{
@@ -112,10 +138,17 @@ void run_cmd(char * cmd){
   else{
     if(class == 1){
       // cd
+      if(args[1] == NULL){
+        chdir(getenv("HOME"));
+      }
+      else{
+        chdir(args[1]);
+      }
       printf("cd\n");
     }
     else if(class == 2){
       // exit
+      raise(SIGINT);
     }
     else if(class == 3){
       // setngs
